@@ -1,0 +1,62 @@
+DROP TABLE IF EXISTS `unread_messages`;
+DROP TABLE IF EXISTS `messages`;
+DROP TABLE IF EXISTS `users_sessions`;
+DROP TABLE IF EXISTS `users`;
+
+CREATE TABLE `users` (
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`login` VARCHAR(200) NOT NULL,
+	`name` VARCHAR(200) NOT NULL,
+	`password_hash` VARCHAR(200) NOT NULL,
+	`last_login` TIMESTAMP,
+	UNIQUE(`login`)
+);
+
+CREATE TABLE `active_sessions` (
+	`user_id` BIGINT NOT NULL,
+	`ip` INT UNSIGNED NOT NULL,
+	`pid` INT UNSIGNED NOT NULL,
+	`port` INT NOT NULL,
+	`session_start` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`last_activity` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE(`user_id`),
+	UNIQUE(`pid`),
+	FOREIGN KEY (`user_id`)
+		REFERENCES `users`(`id`)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+);
+
+CREATE TABLE `messages` (
+	`id` BIGINT NOT NULL PRIMARY KEY,
+	`type` VARCHAR(10),
+	`sender` BIGINT NOT NULL,
+	`receiver` BIGINT,
+	`text` TEXT NOT NULL,
+	`sent` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CHECK(`type` IN ('BROADCAST', 'PRIVATE')),
+	FOREIGN KEY (`sender`)
+		REFERENCES `users`(`id`)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
+	FOREIGN KEY (`receiver`)
+		REFERENCES `users`(`id`)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+);
+
+CREATE TABLE `unread_messages` (
+	`message_id` BIGINT NOT NULL,
+	`user_id` BIGINT NOT NULL,
+	UNIQUE(`message_id`, `user_id`),
+	FOREIGN KEY (`user_id`)
+		REFERENCES `users`(`id`)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
+	FOREIGN KEY (`message_id`)
+		REFERENCES `messages`(`id`)
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+);
+
+
